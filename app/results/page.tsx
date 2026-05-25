@@ -1544,11 +1544,16 @@ function SleepSection({ content }: { content: string }) {
     <section style={{ backgroundColor: FOREST_GREEN }}>
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '80px 32px' }}>
 
-        {/* Header: text + night sky illustration */}
+        {/* Header: night sky illustration + text */}
         <div
-          style={{ display: 'grid', gridTemplateColumns: '1fr 120px', gap: 48, alignItems: 'center', marginBottom: 52 }}
+          style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 48, alignItems: 'center', marginBottom: 52 }}
           className="results-two-col"
         >
+          <div style={{ display: 'flex', justifyContent: 'center', opacity: 0.75 }}>
+            <div style={{ width: 120, height: 130 }}>
+              <IllustrationNightSky />
+            </div>
+          </div>
           <div>
             <p style={{
               fontSize: tokens.typography.scale.xs,
@@ -1569,9 +1574,6 @@ function SleepSection({ content }: { content: string }) {
             }}>
               Your sleep & recovery
             </h2>
-          </div>
-          <div style={{ opacity: 0.75, width: 120, height: 130, marginLeft: 'auto' }}>
-            <IllustrationNightSky />
           </div>
         </div>
 
