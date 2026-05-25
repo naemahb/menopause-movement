@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase'
+import { getSupabase } from '@/lib/supabase'
 
 export async function POST(request: Request) {
   const { email, name, quizAnswers } = await request.json()
@@ -7,7 +7,7 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Valid email required' }, { status: 400 })
   }
 
-  const { error } = await supabase
+  const { error } = await getSupabase()
     .from('subscribers')
     .upsert({ email, name: name || null, quiz_answers: quizAnswers || null })
 
