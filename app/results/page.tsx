@@ -1858,7 +1858,7 @@ function EmailGate({ onUnlock }: { onUnlock: () => void }) {
           </form>
           <button
             onClick={handleSkip}
-            style={{ display: 'block', width: '100%', marginTop: 16, background: 'none', border: 'none', cursor: 'pointer', fontSize: tokens.typography.scale.sm, color: 'rgba(255,255,255,0.3)', textAlign: 'center' }}
+            style={{ display: 'block', width: '100%', marginTop: 16, background: 'none', border: 'none', cursor: 'pointer', fontSize: tokens.typography.scale.sm, color: 'rgba(255,255,255,0.6)', textAlign: 'center' }}
           >
             Skip for now, just show me my plan
           </button>
