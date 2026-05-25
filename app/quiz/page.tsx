@@ -733,7 +733,7 @@ export default function QuizPage() {
                 <p style={{
                   fontSize: tokens.typography.scale.xs,
                   fontWeight: 500,
-                  color: tokens.colors.border,
+                  color: tokens.colors.foregroundMuted,
                 }}>
                   {effectiveCurrentStep} of {effectiveTotal}
                 </p>
