@@ -179,9 +179,12 @@ const SECTION_HEADINGS = [
 function parseSections(text: string): Section[] {
   const sections: Section[] = []
   for (const heading of SECTION_HEADINGS) {
-    const pattern = new RegExp(`##\\s*${heading}\\s*\\n([\\s\\S]*?)(?=##|$)`, 'i')
-    const match = text.match(pattern)
-    if (match) sections.push({ heading, content: match[1].trim() })
+    // Terminated section: content ends at the next ## heading
+    const donePattern = new RegExp(`##\\s*${heading}\\s*\\n([\\s\\S]*?)(?=##)`, 'i')
+    // In-progress section: heading present but no following ## yet (still streaming)
+    const livePattern = new RegExp(`##\\s*${heading}\\s*\\n([\\s\\S]*)$`, 'i')
+    const match = text.match(donePattern) ?? text.match(livePattern)
+    if (match && match[1].trim()) sections.push({ heading, content: match[1].trim() })
   }
   return sections
 }
@@ -2360,30 +2363,38 @@ export default function ResultsPage() {
     if (localStorage.getItem('mm_email_captured') === '1') setEmailUnlocked(true)
   }, [])
 
-  // 3 s minimum — loader never flashes away instantly
+  // 1.5 s minimum — loader never flashes away instantly
   useEffect(() => {
-    const t = setTimeout(() => setMinWaitDone(true), 3000)
+    const t = setTimeout(() => setMinWaitDone(true), 1500)
     return () => clearTimeout(t)
   }, [])
 
-  // 3 s hard cap — dismiss loader; skeletons hold while stream continues
+  // 8 s hard cap — dismiss loader so skeletons show if API is slow
   useEffect(() => {
-    const t = setTimeout(() => setIsLoading(false), 3000)
+    const t = setTimeout(() => setIsLoading(false), 8000)
     return () => clearTimeout(t)
   }, [])
 
-  // Normal path: dismiss once min wait + stream are both done (ideally ~3 s)
+  // Dismiss once min wait is done and stream is complete
   useEffect(() => {
     if (minWaitDone && streamComplete) setIsLoading(false)
   }, [minWaitDone, streamComplete])
 
-  // Stable dismissal — fires 400 ms after isLoading flips false
+  // Also dismiss once min wait is done and first section content has arrived
+  const sections = parseSections(streamedText)
+  useEffect(() => {
+    if (minWaitDone && sections.length > 0) setIsLoading(false)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [minWaitDone, sections.length])
+
+  // Stable dismissal — fires 200 ms after isLoading flips false
   useEffect(() => {
     if (isLoading) return
-    const t = setTimeout(() => setShowLoader(false), 400)
+    const t = setTimeout(() => setShowLoader(false), 200)
     return () => clearTimeout(t)
   }, [isLoading])
 
+  // ── Fetch ────────────────────────────────────────────────────────────────────
   useEffect(() => {
     if (hasFetched.current) return
     hasFetched.current = true
@@ -2410,7 +2421,7 @@ export default function ResultsPage() {
           if (done) break
           accumulated += decoder.decode(value, { stream: true })
           if (!flushTimer) {
-            flushTimer = setTimeout(() => { setStreamedText(accumulated); flushTimer = null }, 400)
+            flushTimer = setTimeout(() => { setStreamedText(accumulated); flushTimer = null }, 80)
           }
         }
         if (flushTimer) clearTimeout(flushTimer)
@@ -2426,7 +2437,6 @@ export default function ResultsPage() {
     fetchPlan()
   }, [router])
 
-  const sections = parseSections(streamedText)
   const get = (h: string) => sections.find((s) => s.heading === h)
 
   const startingPoint = get('Your Starting Point')
