@@ -149,11 +149,11 @@ function parseStrengthSessions(weeklyContent: string): StrengthSession[] {
       if (!/^[•\-]/.test(line)) continue
       // Strip bullet and bold markers
       const clean = line.replace(/^[•\-]\s*/, '').replace(/\*\*/g, '')
-      // New API format: "Name: N sets × M–P reps. Description."
-      const newFmt = clean.match(/^(.+?):\s*(\d+\s+sets?\s+[×x]\s+[\d–\-]+(?:[–\-]\d+)?\s+reps?(?:\s+per\s+\w+)?)\.?\s*(.*)/)
-      // Old/mock format: "Name — N sets of M–P reps. Description."
-      const oldFmt = clean.match(/^(.+?)\s*[—–-]\s*(\d+\s+sets?\s+of\s+[\d–-]+(?:\s+per\s+\w+)?)\.?\s*(.*)/)
-      const m = newFmt ?? oldFmt
+      // "Name: N sets × M–P reps. Description." OR "Name: N sets of M–P reps. Description."
+      const colonFmt = clean.match(/^([^:]+):\s*(\d+\s+sets?[^.]{0,60})\.?\s*(.*)/)
+      // Mock format: "Name — N sets of M–P reps. Description."
+      const dashFmt = clean.match(/^(.+?)\s*[—–-]\s*(\d+\s+sets?\s+of\s+[\d–-]+(?:\s+per\s+\w+)?)\.?\s*(.*)/)
+      const m = colonFmt ?? dashFmt
       if (!m) continue
       const youtubeM = clean.match(/\(search\s+"([^"]+)"\s+on\s+YouTube\)/i)
       const desc = (m[3] ?? '').replace(/\s*\(search[^)]+\)/gi, '').trim().replace(/\.$/, '')
