@@ -170,7 +170,7 @@ export default function Home() {
               >
                 Take the quiz — it takes 5 minutes
               </motion.button>
-              <span style={{ fontSize: tokens.typography.scale.sm, color: 'rgba(255,255,255,0.4)' }}>
+              <span className="hero-cta-tagline" style={{ fontSize: tokens.typography.scale.sm, color: 'rgba(255,255,255,0.4)' }}>
                 Free · No signup required
               </span>
             </div>
