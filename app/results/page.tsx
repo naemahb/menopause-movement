@@ -822,7 +822,7 @@ function DayCard({ entry }: { entry: DayEntry }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {formatActivitySentences(entry.activity).map((sentence, i) => (
                 <p key={i} style={{ fontSize: tokens.typography.scale.base, color: tokens.colors.foreground, lineHeight: 1.6 }}>
-                  {sentence}
+                  {inlineMd(sentence)}
                 </p>
               ))}
             </div>
@@ -1188,7 +1188,7 @@ function ProgressionSection({ content }: { content: string }) {
                 {week.title}
               </h4>
               <p style={{ fontSize: tokens.typography.scale.base, color: tokens.colors.foregroundMuted, lineHeight: 1.7 }}>
-                {week.body}
+                {inlineMd(week.body)}
               </p>
             </div>
           ))}
@@ -1493,7 +1493,7 @@ function ProteinSection({ content }: { content: string }) {
                   color: tokens.colors.foregroundMuted,
                   lineHeight: 1.65,
                 }}>
-                  {tip.body}
+                  {inlineMd(tip.body)}
                 </p>
               </div>
             ))}
