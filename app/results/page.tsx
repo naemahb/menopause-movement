@@ -2065,13 +2065,14 @@ function downloadPDF(sections: Section[]) {
 
   // ── Section divider label ────────────────────────────────────────────────────
   const sectionLabel = (heading: string) => {
-    guard(36)
-    doc.setFontSize(7.5); doc.setFont('helvetica', 'bold'); t(150, 150, 150)
-    doc.text(heading.toUpperCase(), M, y)
-    y += 6
-    d(217, 213, 206); doc.setLineWidth(0.5)
+    y += 10  // breathing room before every section
+    guard(60)
+    doc.setFontSize(18); doc.setFont('helvetica', 'bold'); t(27, 45, 27)
+    doc.text(heading, M, y + 16)
+    y += 30
+    d(214, 221, 208); doc.setLineWidth(0.5)
     doc.line(M, y, M + W, y)
-    y += 16
+    y += 20
   }
 
   // ── Key/value line parser (shared by protein + sleep) ───────────────────────
@@ -2087,6 +2088,7 @@ function downloadPDF(sections: Section[]) {
     titleColor: RGB,
     bodyColor: RGB,
     hasBorder: boolean,
+    noGuard = false,  // pass true when a background panel is pre-drawn above
   ) => {
     const gap = 10; const cW = (W - gap) / 2; const PAD = 14
     for (let i = 0; i < tips.length; i += 2) {
@@ -2096,9 +2098,9 @@ function downloadPDF(sections: Section[]) {
       const cH = Math.max(
         PAD + 14 + 8 + lL.length * 12 + PAD,
         right ? PAD + 14 + 8 + rL.length * 12 + PAD : 0,
-        48
+        56
       )
-      guard(cH + gap)
+      if (!noGuard) guard(cH + gap)
       ;([[left, M, lL, i], right ? [right, M + cW + gap, rL, i + 1] : null] as const).forEach((slot) => {
         if (!slot) return
         const [tip, x, lines] = slot as [{ title: string; body: string }, number, string[], number]
@@ -2255,50 +2257,60 @@ function downloadPDF(sections: Section[]) {
 
     // ── YOUR STRESS & CORTISOL ───────────────────────────────────────────────
     } else if (section.heading === 'Your Stress & Cortisol') {
-      const introLine = section.content.split(/\n+/).find((l: string) => !l.startsWith('**') && !l.startsWith('-') && l.length > 20)?.trim() ?? ''
+      const introLine = section.content
+        .split(/\n+/)
+        .find((l: string) => !l.startsWith('**') && !l.startsWith('-') && l.length > 20)
+        ?.trim().replace(/\*\*/g, '') ?? ''
       const tips = parseKV(section.content)
 
-      if (introLine) {
-        const introLines = doc.splitTextToSize(introLine, W)
-        guard(introLines.length * 13 + 16)
-        doc.setFontSize(9.5); doc.setFont('helvetica', 'normal'); t(40, 40, 40)
-        doc.text(introLines, M, y)
-        y += introLines.length * 13 + 16
-      }
-
       const gap = 10; const cW = (W - gap) / 2; const PAD = 14
+      const introLines = introLine ? doc.splitTextToSize(introLine, W) : []
+      const introH = introLines.length > 0 ? introLines.length * 13 + 22 : 0
+
       let panelH = 0
       for (let i = 0; i < tips.length; i += 2) {
         const l = tips[i]; const r = tips[i + 1]
         const lL = doc.splitTextToSize(l.body, cW - PAD * 2)
         const rL = r ? doc.splitTextToSize(r.body, cW - PAD * 2) : []
-        panelH += Math.max(PAD + 14 + 8 + lL.length * 12 + PAD, r ? PAD + 14 + 8 + rL.length * 12 + PAD : 0, 48) + gap
+        panelH += Math.max(PAD + 14 + 8 + lL.length * 12 + PAD, r ? PAD + 14 + 8 + rL.length * 12 + PAD : 0, 56) + gap
       }
-      guard(panelH + 20)
-      f(232, 221, 216); doc.roundedRect(M - 16, y - 10, W + 32, panelH + 16, 8, 8, 'F')
-      twoColCards(tips, () => [245, 238, 234], [60, 40, 35], [100, 80, 75], false)
+
+      // Single guard for the entire section so the pre-drawn panel and cards always stay together
+      guard(introH + panelH + 36)
+
+      if (introLines.length > 0) {
+        doc.setFontSize(9.5); doc.setFont('helvetica', 'normal'); t(40, 40, 40)
+        doc.text(introLines, M, y)
+        y += introH
+      }
+
+      // panelH + 30 ensures content (panelH + 10 from twoColCards) sits inside with 10pt bottom padding
+      f(232, 221, 216); doc.roundedRect(M - 16, y - 14, W + 32, panelH + 30, 8, 8, 'F')
+      twoColCards(tips, () => [245, 238, 234], [60, 40, 35], [100, 80, 75], false, true)
+      y += 14
 
     // ── YOUR SLEEP & RECOVERY ─────────────────────────────────────────────────
     } else if (section.heading === 'Your Sleep & Recovery') {
       const tips = parseKV(section.content)
-      // Measure total height for the dark panel
       const gap = 10; const cW = (W - gap) / 2; const PAD = 14
       let panelH = 0
       for (let i = 0; i < tips.length; i += 2) {
         const l = tips[i]; const r = tips[i + 1]
         const lL = doc.splitTextToSize(l.body, cW - PAD * 2)
         const rL = r ? doc.splitTextToSize(r.body, cW - PAD * 2) : []
-        panelH += Math.max(PAD + 14 + 8 + lL.length * 12 + PAD, r ? PAD + 14 + 8 + rL.length * 12 + PAD : 0, 48) + gap
+        panelH += Math.max(PAD + 14 + 8 + lL.length * 12 + PAD, r ? PAD + 14 + 8 + rL.length * 12 + PAD : 0, 56) + gap
       }
-      guard(panelH + 20)
-      f(27, 45, 27); doc.roundedRect(M - 16, y - 10, W + 32, panelH + 16, 8, 8, 'F')
+      guard(panelH + 36)
+      f(27, 45, 27); doc.roundedRect(M - 16, y - 14, W + 32, panelH + 30, 8, 8, 'F')
       twoColCards(
         tips,
         () => [45, 68, 45],
         [220, 245, 220],
         [170, 205, 170],
         false,
+        true,
       )
+      y += 14
 
     // ── ALL OTHER SECTIONS ────────────────────────────────────────────────────
     } else {
