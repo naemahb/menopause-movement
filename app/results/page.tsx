@@ -28,7 +28,8 @@ function parseDayEntries(text: string): DayEntry[] {
     if (!match) continue
     const activity = match[0]
       .replace(/\*\*/g, '')
-      .replace(new RegExp(`^${day}[\\s:—–\\-]+`, 'i'), '')
+      // Strip day name then any non-alphanumeric separator chars (handles —, –, -, :, spaces, etc.)
+      .replace(new RegExp(`^${day}\\b[^a-z0-9]+`, 'i'), '')
       .trim()
     const lower = activity.toLowerCase()
     let type: DayEntry['type'] = 'other'
