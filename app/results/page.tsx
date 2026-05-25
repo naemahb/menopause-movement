@@ -59,6 +59,42 @@ function formatActivitySentences(text: string): string[] {
     .filter(Boolean)
 }
 
+// Renders inline **bold** and *italic* markers as React elements
+function inlineMd(text: string): React.ReactNode[] {
+  const out: React.ReactNode[] = []
+  const re = /\*\*(.+?)\*\*|\*([^*\n]+?)\*/g
+  let last = 0
+  let m: RegExpExecArray | null
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > last) out.push(text.slice(last, m.index))
+    if (m[1] !== undefined) out.push(<strong key={m.index}>{m[1]}</strong>)
+    else out.push(<em key={m.index}>{m[2]}</em>)
+    last = m.index + m[0].length
+  }
+  if (last < text.length) out.push(text.slice(last))
+  return out
+}
+
+// Block markdown renderer: handles paragraphs, **bold**, *italic*, and --- horizontal rules
+function RenderMd({ text, pStyle }: { text: string; pStyle?: React.CSSProperties }) {
+  const blocks = text.split(/\n{2,}|\n---\n|^---$/m)
+  return (
+    <>
+      {blocks.map((block, i) => {
+        const trimmed = block.trim()
+        if (!trimmed || trimmed === '---') {
+          return <hr key={i} style={{ border: 'none', borderTop: `1px solid ${tokens.colors.border}`, margin: '16px 0', opacity: 0.4 }} />
+        }
+        return (
+          <p key={i} style={{ margin: i > 0 ? '14px 0 0' : 0, ...pStyle }}>
+            {inlineMd(trimmed)}
+          </p>
+        )
+      })}
+    </>
+  )
+}
+
 function extractProteinNumber(text: string): { display: string; note: string } {
   const rangeMatch = text.match(/(\d+)[–\-–](\d+)\s*g/i)
   const singleMatch = text.match(/(\d+)\s*g/i)
@@ -577,14 +613,9 @@ function HeroSection({ content }: { content: string }) {
           }}>
             Your movement plan is ready.
           </h1>
-          <p style={{
-            fontSize: 'clamp(17px, 2vw, 20px)',
-            color: 'rgba(255,255,255,0.75)',
-            lineHeight: 1.7,
-            maxWidth: 500,
-          }}>
-            {content}
-          </p>
+          <div style={{ maxWidth: 500 }}>
+            <RenderMd text={content} pStyle={{ fontSize: 'clamp(17px, 2vw, 20px)', color: 'rgba(255,255,255,0.75)', lineHeight: 1.7 }} />
+          </div>
         </div>
         <div style={{ opacity: 0.65 }}>
           <IllustrationBotanical />
@@ -629,13 +660,9 @@ function WhySection({ content }: { content: string }) {
           }}>
             Why this is happening
           </h2>
-          <p style={{
-            fontSize: tokens.typography.scale.lg,
-            color: tokens.colors.foreground,
-            lineHeight: 1.75,
-          }}>
-            {content}
-          </p>
+          <div>
+            <RenderMd text={content} pStyle={{ fontSize: tokens.typography.scale.lg, color: tokens.colors.foreground, lineHeight: 1.75 }} />
+          </div>
         </div>
         <div>
           <IllustrationWave />
@@ -815,9 +842,9 @@ function WeeklySection({ content }: { content: string }) {
     return (
       <section style={{ backgroundColor: tokens.colors.background }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', padding: '80px 32px' }}>
-          <p style={{ fontSize: tokens.typography.scale.base, color: tokens.colors.foreground, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
-            {content}
-          </p>
+          <div>
+            <RenderMd text={content} pStyle={{ fontSize: tokens.typography.scale.base, color: tokens.colors.foreground, lineHeight: 1.7 }} />
+          </div>
         </div>
       </section>
     )
@@ -1107,13 +1134,9 @@ function FirstWeekSection({ content }: { content: string }) {
           }}>
             Your first week focus
           </h2>
-          <p style={{
-            fontSize: tokens.typography.scale.lg,
-            color: tokens.colors.foreground,
-            lineHeight: 1.75,
-          }}>
-            {content}
-          </p>
+          <div>
+            <RenderMd text={content} pStyle={{ fontSize: tokens.typography.scale.lg, color: tokens.colors.foreground, lineHeight: 1.75 }} />
+          </div>
         </div>
       </div>
     </section>
