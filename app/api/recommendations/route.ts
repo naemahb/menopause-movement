@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
+import { createHash } from 'node:crypto'
 import { headers } from 'next/headers'
 import type { QuizFormState, BodyFrustration } from '@/lib/types'
 import { getCortisolRiskLevel } from '@/lib/scoring'
@@ -359,9 +360,22 @@ export async function POST(request: Request) {
       controller.close()
 
       try {
-        await getSupabase()
+        // Fingerprint the answers so refreshes don't create duplicate rows.
+        // The hash is stored inside quiz_answers JSONB so no schema change is needed.
+        const fp = createHash('sha256').update(JSON.stringify(answers)).digest('hex')
+        const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString()
+        const { data: existing } = await getSupabase()
           .from('quiz_results')
-          .insert({ quiz_answers: answers, generated_plan: fullText })
+          .select('id')
+          .filter('quiz_answers->>_fp', 'eq', fp)
+          .gte('created_at', cutoff)
+          .limit(1)
+
+        if (!existing?.length) {
+          await getSupabase()
+            .from('quiz_results')
+            .insert({ quiz_answers: { ...answers, _fp: fp }, generated_plan: fullText })
+        }
       } catch (e) {
         console.error('[supabase] save quiz result error:', e)
       }
