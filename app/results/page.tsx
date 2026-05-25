@@ -22,18 +22,22 @@ function parseDayEntries(text: string): DayEntry[] {
   const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
   const entries: DayEntry[] = []
   for (const day of DAYS) {
-    const pattern = new RegExp(`${day}[:\\s–-]+(.+?)(?=\\n(?:${DAYS.join('|')})|$)`, 'is')
+    // Match just the header line — handles both "Monday: Title" and "**MONDAY — Title**"
+    const pattern = new RegExp(`\\*{0,2}${day}\\b[^\\n]*`, 'i')
     const match = text.match(pattern)
-    if (match) {
-      const activity = match[1].trim().replace(/\n/g, ' ')
-      const lower = activity.toLowerCase()
-      let type: DayEntry['type'] = 'other'
-      if (lower.includes('rest') || lower.includes('stretch')) type = 'rest'
-      else if (lower.includes('walk') || lower.includes('zone 2') || lower.includes('incline')) type = 'walk'
-      else if (lower.includes('strength') || lower.includes('resistance') || lower.includes('dumbbell') || lower.includes('gym')) type = 'strength'
-      else if (lower.includes('optional')) type = 'optional'
-      entries.push({ day, activity, type })
-    }
+    if (!match) continue
+    const activity = match[0]
+      .replace(/\*\*/g, '')
+      .replace(new RegExp(`^${day}[\\s:—–\\-]+`, 'i'), '')
+      .trim()
+    const lower = activity.toLowerCase()
+    let type: DayEntry['type'] = 'other'
+    // Check strength first so "Lower Body Strength + Loaded Walk" → strength not walk
+    if (lower.includes('strength') || lower.includes('resistance') || lower.includes('upper body') || lower.includes('lower body') || lower.includes('total body') || lower.includes('full body') || lower.includes('density')) type = 'strength'
+    else if (lower.includes('walk') || lower.includes('zone 2') || lower.includes('incline')) type = 'walk'
+    else if (lower.includes('rest') || lower.includes('recovery') || lower.includes('stretch') || lower.includes('mobility')) type = 'rest'
+    else if (lower.includes('optional')) type = 'optional'
+    entries.push({ day, activity, type })
   }
   return entries
 }
@@ -79,26 +83,47 @@ function parseStrengthSessions(weeklyContent: string): StrengthSession[] {
   const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
   const sessions: StrengthSession[] = []
   for (const day of DAYS) {
-    const pattern = new RegExp(`${day}[:\\s]+(.+?)(?=(?:${DAYS.join('|')})[:\\s]|$)`, 'is')
+    // Capture the rest of the header line + the block until the next day header
+    const pattern = new RegExp(
+      `\\*{0,2}${day}\\b([^\\n]*)\\n([\\s\\S]*?)(?=\\*{0,2}(?:${DAYS.join('|')})\\b|$)`,
+      'i'
+    )
     const match = weeklyContent.match(pattern)
     if (!match) continue
-    const text = match[1].trim()
-    const lower = text.toLowerCase()
-    if (!lower.includes('strength') && !lower.includes('resistance') && !lower.includes('dumbbell') && !lower.includes('gym')) continue
-    const lines = text.split('\n').map((l) => l.trim()).filter(Boolean)
-    const title = lines[0] ?? day
+    // Extract clean title from the header remainder (e.g., " — Lower Body Strength**" → "Lower Body Strength")
+    const title = match[1]
+      .replace(/\*\*/g, '')
+      .replace(/^[\s:—–\-]+/, '')
+      .replace(/[\s:—–\-]+$/, '')
+      .trim()
+    const blockText = match[2]
+    const lower = (title + ' ' + blockText).toLowerCase()
+    if (
+      !lower.includes('strength') && !lower.includes('resistance') &&
+      !lower.includes('dumbbell') && !lower.includes('gym') &&
+      !lower.includes('upper body') && !lower.includes('lower body') &&
+      !lower.includes('total body') && !lower.includes('full body') &&
+      !lower.includes('density') && !lower.includes('squat') &&
+      !lower.includes('deadlift') && !lower.includes('press') &&
+      !lower.includes('lunge') && !lower.includes('row')
+    ) continue
+    const lines = blockText.split('\n').map((l) => l.trim()).filter(Boolean)
     const exercises: ExerciseDetail[] = []
-    for (const line of lines.slice(1)) {
+    for (const line of lines) {
       if (!/^[•\-]/.test(line)) continue
-      const clean = line.replace(/^[•\-]\s*/, '')
-      const setsM = clean.match(/^(.+?)\s*[—–-]\s*(\d+\s+sets?\s+of\s+[\d–-]+(?:\s+per\s+\w+)?)\./)
-      if (!setsM) continue
+      // Strip bullet and bold markers
+      const clean = line.replace(/^[•\-]\s*/, '').replace(/\*\*/g, '')
+      // New API format: "Name: N sets × M–P reps. Description."
+      const newFmt = clean.match(/^(.+?):\s*(\d+\s+sets?\s+[×x]\s+[\d–\-]+(?:[–\-]\d+)?\s+reps?(?:\s+per\s+\w+)?)\.?\s*(.*)/)
+      // Old/mock format: "Name — N sets of M–P reps. Description."
+      const oldFmt = clean.match(/^(.+?)\s*[—–-]\s*(\d+\s+sets?\s+of\s+[\d–-]+(?:\s+per\s+\w+)?)\.?\s*(.*)/)
+      const m = newFmt ?? oldFmt
+      if (!m) continue
       const youtubeM = clean.match(/\(search\s+"([^"]+)"\s+on\s+YouTube\)/i)
-      const afterSets = clean.slice(setsM[0].length).trim()
-      const desc = afterSets.replace(/\s*\(search[^)]+\)/gi, '').trim().replace(/\.$/, '')
-      exercises.push({ name: setsM[1].trim(), sets: setsM[2].trim(), description: desc, youtubeSearch: youtubeM?.[1] ?? '' })
+      const desc = (m[3] ?? '').replace(/\s*\(search[^)]+\)/gi, '').trim().replace(/\.$/, '')
+      exercises.push({ name: m[1].trim(), sets: m[2].trim(), description: desc, youtubeSearch: youtubeM?.[1] ?? '' })
     }
-    if (exercises.length > 0) sessions.push({ day, title, exercises })
+    if (exercises.length > 0) sessions.push({ day, title: title || day, exercises })
   }
   return sessions
 }
@@ -950,10 +975,7 @@ function StrengthSection({ content }: { content: string }) {
                   padding: '3px 10px',
                   flexShrink: 0,
                 }}>
-                  {(() => {
-                    const m = session.title.match(/[—–-]\s*(.+)/)
-                    return m ? m[1].trim() : 'Strength'
-                  })()}
+                  {session.title || 'Strength'}
                 </span>
               </div>
 
