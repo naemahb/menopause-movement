@@ -41,10 +41,12 @@ h5 { font-size: 14px; }
 /* Week grid: 4-col row 1, 3-col row 2 */
 .week-grid-4 { grid-template-columns: repeat(4, 1fr); }
 .week-grid-3 { grid-template-columns: repeat(3, 1fr); }
+.strength-ex-grid { grid-template-columns: repeat(2, 1fr); }
 
 @media (max-width: 680px) {
   .week-grid-4,
-  .week-grid-3 { grid-template-columns: repeat(2, 1fr); }
+  .week-grid-3,
+  .strength-ex-grid { grid-template-columns: 1fr; }
 }
 
 /* Results page responsive grid helpers */
@@ -67,6 +69,23 @@ h5 { font-size: 14px; }
 
 @media (max-width: 680px) {
   .landing-botanical { display: none; }
+}
+
+/* Profile banner: 2-col grid on mobile, Health spans full width */
+@media (max-width: 680px) {
+  .profile-groups {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 16px;
+  }
+  .profile-group {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    border-left: none !important;
+  }
+  .profile-group-full {
+    grid-column: 1 / -1;
+  }
 }
 
 /* Skeleton loading pulse */

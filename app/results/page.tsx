@@ -422,10 +422,11 @@ function ProfileBanner() {
         }}>
           Your profile
         </p>
-        <div style={{ display: 'flex', gap: 0, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 0, flexWrap: 'wrap' }} className="profile-groups">
           {groups.map((group, i) => (
             <div
               key={group.label}
+              className={`profile-group${group.label === 'Health' ? ' profile-group-full' : ''}`}
               style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -915,11 +916,7 @@ function StrengthSection({ content }: { content: string }) {
               </div>
 
               {/* Exercise cards */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: 12,
-              }}>
+              <div style={{ display: 'grid', gap: 12 }} className="strength-ex-grid">
                 {session.exercises.map((ex, i) => (
                   <div key={i} style={{
                     backgroundColor: 'rgba(255,255,255,0.55)',
