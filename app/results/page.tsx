@@ -1492,14 +1492,9 @@ function CortisolSection({ content }: { content: string }) {
     <section style={{ backgroundColor: tokens.colors.surfaceBlush }}>
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '80px 32px' }}>
         <div
-          style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 48, alignItems: 'center', marginBottom: 48 }}
+          style={{ display: 'grid', gridTemplateColumns: '1fr 120px', gap: 48, alignItems: 'center', marginBottom: 48 }}
           className="results-two-col"
         >
-          <div style={{ display: 'flex', justifyContent: 'center', opacity: 0.55 }}>
-            <div style={{ width: 100, height: 100 }}>
-              <IllustrationBreathRings />
-            </div>
-          </div>
           <div>
             <p style={{
               fontSize: tokens.typography.scale.xs,
@@ -1519,6 +1514,11 @@ function CortisolSection({ content }: { content: string }) {
             }}>
               Your stress & cortisol load
             </h2>
+          </div>
+          <div className="section-illus-right" style={{ display: 'flex', justifyContent: 'center', opacity: 0.55 }}>
+            <div style={{ width: 100, height: 100 }}>
+              <IllustrationBreathRings />
+            </div>
           </div>
         </div>
 
@@ -1541,17 +1541,24 @@ function CortisolSection({ content }: { content: string }) {
               borderRadius: 14,
               padding: '22px 24px 28px',
               border: `1px solid ${tokens.colors.border}`,
+              display: 'flex',
+              flexDirection: 'column',
             }}>
-              <p style={{
-                fontSize: tokens.typography.scale.xs,
+              <span style={{
+                fontSize: 12,
                 fontWeight: 700,
-                letterSpacing: '0.1em',
-                textTransform: 'uppercase',
+                letterSpacing: '0.15em',
                 color: tokens.colors.foregroundMuted,
+                opacity: 0.5,
                 marginBottom: 10,
               }}>
-                {tip.title}
-              </p>
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              {tip.title && (
+                <h4 style={{ color: tokens.colors.foreground, marginBottom: 8, lineHeight: 1.3 }}>
+                  {tip.title}
+                </h4>
+              )}
               <p style={{ fontSize: tokens.typography.scale.base, color: tokens.colors.foreground, lineHeight: 1.65 }}>
                 {tip.body}
               </p>
@@ -1671,16 +1678,11 @@ function SleepSection({ content }: { content: string }) {
     <section style={{ backgroundColor: FOREST_GREEN }}>
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '80px 32px' }}>
 
-        {/* Header: night sky illustration + text */}
+        {/* Header: text left (desktop) / top (mobile), illustration right (desktop) / above text (mobile) */}
         <div
-          style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 48, alignItems: 'center', marginBottom: 52 }}
+          style={{ display: 'grid', gridTemplateColumns: '1fr 120px', gap: 48, alignItems: 'center', marginBottom: 52 }}
           className="results-two-col"
         >
-          <div style={{ display: 'flex', justifyContent: 'center', opacity: 0.75 }}>
-            <div style={{ width: 120, height: 130 }}>
-              <IllustrationNightSky />
-            </div>
-          </div>
           <div>
             <p style={{
               fontSize: tokens.typography.scale.xs,
@@ -1701,6 +1703,11 @@ function SleepSection({ content }: { content: string }) {
             }}>
               Your sleep & recovery
             </h2>
+          </div>
+          <div className="section-illus-right" style={{ display: 'flex', justifyContent: 'center', opacity: 0.75 }}>
+            <div style={{ width: 120, height: 130 }}>
+              <IllustrationNightSky />
+            </div>
           </div>
         </div>
 

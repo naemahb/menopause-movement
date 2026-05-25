@@ -72,6 +72,7 @@ h5 { font-size: 14px; }
   .landing-hero { min-height: auto !important; align-items: flex-start !important; }
   .hero-cta-row { justify-content: center; }
   .hero-cta-tagline { width: 100%; text-align: center; }
+  .section-illus-right { order: -1; }
 }
 
 /* Profile banner: 2-col grid on mobile, Health spans full width */
