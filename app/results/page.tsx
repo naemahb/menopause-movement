@@ -1833,7 +1833,7 @@ function EmailGate({ onUnlock }: { onUnlock: () => void }) {
               <path d="M16 14 C16 10 14 7 16 5 C18 7 16 10 16 14" stroke="white" strokeWidth="1.1" fill="none" strokeLinecap="round" />
             </svg>
             <p style={{ fontSize: tokens.typography.scale.base, color: 'rgba(255,255,255,0.7)', lineHeight: 1.7 }}>
-              This is an early version of Menopause Movement. Leave your email and I'll reach out for feedback — what resonated, what was missing, what could be clearer. Your input will directly shape where this goes next.
+              Menopause Movement is a work in progress. If you want to share what resonated, what felt missing, or what could be clearer, leave your email and I'll reach out. Your input will directly shape where this goes next.
             </p>
           </div>
           <p style={{ fontSize: tokens.typography.scale.base, color: 'rgba(255,255,255,0.6)', lineHeight: 1.7 }}>
