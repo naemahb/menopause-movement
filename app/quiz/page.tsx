@@ -11,6 +11,26 @@ import { ContinueButton } from '@/components/quiz/ContinueButton'
 import { tokens } from '@/lib/tokens'
 import type { MedicalCondition, BodyFrustration } from '@/lib/types'
 
+const STEP_SECTION: Record<string, string> = {
+  stage:            'Stage & Age',
+  age:              'Stage & Age',
+  menstrualStatus:  'Stage & Age',
+  hrtStatus:        'Stage & Age',
+  hotFlashSeverity: 'Symptoms',
+  exerciseType:     'Symptoms',
+  jointPain:        'Symptoms',
+  stressLevel:      'Symptoms',
+  energyLevel:      'Symptoms',
+  sleepQuality:     'Symptoms',
+  primaryGoal:      'Goal',
+  bodyFrustration:  'Goal',
+  timeAvailable:    'Setup',
+  equipment:        'Setup',
+  weightBracket:    'Health',
+  dietaryPattern:   'Health',
+  medicalConditions:'Health',
+}
+
 const STEP_ORDER = [
   'stage',
   'age',
@@ -673,21 +693,11 @@ export default function QuizPage() {
 
   const { question, subtext } = getStepConfig()
 
+  const section = STEP_SECTION[currentStepKey]
+
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: tokens.colors.background }}>
       <ProgressBar current={effectiveCurrentStep} total={effectiveTotal} />
-
-      <div className="px-6 pt-4">
-        <button
-          type="button"
-          onClick={goBack}
-          className="flex items-center gap-1"
-          style={{ fontSize: tokens.typography.scale.sm, color: tokens.colors.foreground }}
-        >
-          <ArrowLeft size={16} />
-          Back
-        </button>
-      </div>
 
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
         <div className="w-full max-w-[480px]">
@@ -699,18 +709,36 @@ export default function QuizPage() {
               exit={{ opacity: 0, x: -24 }}
               transition={{ duration: 0.3, ease: 'easeOut' }}
             >
-              <p
-                className="mb-1"
-                style={{
-                  fontSize: tokens.typography.scale.xs,
-                  fontWeight: 600,
-                  letterSpacing: '0.06em',
+              {/* Back + section heading */}
+              <div style={{ marginBottom: 24 }}>
+                <button
+                  type="button"
+                  onClick={goBack}
+                  className="flex items-center gap-1"
+                  style={{ fontSize: tokens.typography.scale.sm, color: tokens.colors.foregroundMuted, marginBottom: 16 }}
+                >
+                  <ArrowLeft size={15} />
+                  Back
+                </button>
+                <p style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  letterSpacing: '0.14em',
                   textTransform: 'uppercase',
                   color: tokens.colors.foregroundMuted,
-                }}
-              >
-                {effectiveCurrentStep} of {effectiveTotal}
-              </p>
+                  marginBottom: 4,
+                }}>
+                  {section}
+                </p>
+                <p style={{
+                  fontSize: tokens.typography.scale.xs,
+                  fontWeight: 500,
+                  color: tokens.colors.border,
+                }}>
+                  {effectiveCurrentStep} of {effectiveTotal}
+                </p>
+              </div>
+
               <h1
                 className="mb-2"
                 style={{
