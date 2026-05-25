@@ -31,6 +31,71 @@ const STEP_SECTION: Record<string, string> = {
   medicalConditions:'Health',
 }
 
+const SECTION_ORDER = ['Stage & Age', 'Symptoms', 'Goal', 'Setup', 'Health']
+
+const SECTION_BG: Record<string, string> = {
+  'Stage & Age': '#f5f3ef',
+  'Symptoms':    '#e8ddd8',
+  'Goal':        '#d6ddd0',
+  'Setup':       '#edeae3',
+  'Health':      '#ffffff',
+}
+
+const SECTION_DESCRIPTION: Record<string, string> = {
+  'Stage & Age': 'Where you are in your journey',
+  'Symptoms':    'How your body has been feeling',
+  'Goal':        'What you want to achieve',
+  'Setup':       'Your time and equipment',
+  'Health':      'Your health context',
+}
+
+function SectionTransitionCard({ section }: { section: string }) {
+  const idx = SECTION_ORDER.indexOf(section) + 1
+  const bg = SECTION_BG[section] ?? '#f5f3ef'
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+      style={{
+        position: 'fixed', inset: 0, backgroundColor: bg,
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+        zIndex: 50, padding: 32,
+      }}
+    >
+      <div style={{ textAlign: 'center', maxWidth: 400 }}>
+        <p style={{
+          fontSize: 11, fontWeight: 700, letterSpacing: '0.15em',
+          textTransform: 'uppercase', color: tokens.colors.foregroundMuted, marginBottom: 16,
+        }}>
+          Section {idx} of {SECTION_ORDER.length}
+        </p>
+        <h2 style={{
+          fontFamily: 'var(--font-serif), Georgia, serif',
+          fontSize: 'clamp(34px, 6vw, 52px)', fontWeight: 400,
+          color: tokens.colors.foreground, letterSpacing: '-0.02em',
+          lineHeight: 1.1, marginBottom: 14,
+        }}>
+          {section}
+        </h2>
+        <p style={{ fontSize: tokens.typography.scale.base, color: tokens.colors.foregroundMuted, lineHeight: 1.6 }}>
+          {SECTION_DESCRIPTION[section]}
+        </p>
+      </div>
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 3, backgroundColor: 'rgba(0,0,0,0.07)' }}>
+        <motion.div
+          initial={{ width: '0%' }}
+          animate={{ width: '100%' }}
+          transition={{ duration: 1.7, ease: 'linear' }}
+          style={{ height: '100%', backgroundColor: tokens.colors.foreground }}
+        />
+      </div>
+    </motion.div>
+  )
+}
+
 const STEP_ORDER = [
   'stage',
   'age',
@@ -57,6 +122,8 @@ export default function QuizPage() {
   const router = useRouter()
   const { formState, updateForm, getCortisolScore } = useQuiz()
   const [currentStepIndex, setCurrentStepIndex] = useState(0)
+  const [transitionSection, setTransitionSection] = useState<string | null>(null)
+  const [pendingAdvanceIndex, setPendingAdvanceIndex] = useState<number | null>(null)
 
   const currentStepKey = STEP_ORDER[currentStepIndex]
 
@@ -81,13 +148,29 @@ export default function QuizPage() {
       nextIndex++
     }
     if (nextIndex < STEP_ORDER.length) {
-      setCurrentStepIndex(nextIndex)
+      const nextSection = STEP_SECTION[STEP_ORDER[nextIndex]]
+      if (nextSection !== STEP_SECTION[currentStepKey]) {
+        setTransitionSection(nextSection)
+        setPendingAdvanceIndex(nextIndex)
+      } else {
+        setCurrentStepIndex(nextIndex)
+      }
     } else {
       const cortisolScore = getCortisolScore()
       sessionStorage.setItem('quizAnswers', JSON.stringify({ ...formState, cortisolScore }))
       router.push('/results')
     }
-  }, [currentStepIndex, skippedSteps, formState, getCortisolScore, router])
+  }, [currentStepIndex, currentStepKey, skippedSteps, formState, getCortisolScore, router])
+
+  useEffect(() => {
+    if (pendingAdvanceIndex === null) return
+    const t = setTimeout(() => {
+      setCurrentStepIndex(pendingAdvanceIndex)
+      setPendingAdvanceIndex(null)
+      setTransitionSection(null)
+    }, 1700)
+    return () => clearTimeout(t)
+  }, [pendingAdvanceIndex])
 
   // Keep a stable ref so advanceWithDelay always calls the latest advance
   const advanceRef = useRef(advance)
@@ -694,10 +777,15 @@ export default function QuizPage() {
   const { question, subtext } = getStepConfig()
 
   const section = STEP_SECTION[currentStepKey]
+  const sectionBg = SECTION_BG[section] ?? tokens.colors.background
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: tokens.colors.background }}>
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: transitionSection ? SECTION_BG[transitionSection] : sectionBg, transition: 'background-color 0.4s ease' }}>
       <ProgressBar current={effectiveCurrentStep} total={effectiveTotal} />
+
+      <AnimatePresence>
+        {transitionSection && <SectionTransitionCard key={transitionSection} section={transitionSection} />}
+      </AnimatePresence>
 
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
         <div className="w-full max-w-[480px]">
@@ -720,23 +808,24 @@ export default function QuizPage() {
                   <ArrowLeft size={15} />
                   Back
                 </button>
-                <p style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  letterSpacing: '0.14em',
-                  textTransform: 'uppercase',
-                  color: tokens.colors.foregroundMuted,
-                  marginBottom: 4,
-                }}>
-                  {section}
-                </p>
-                <p style={{
-                  fontSize: tokens.typography.scale.xs,
-                  fontWeight: 500,
-                  color: tokens.colors.foregroundMuted,
-                }}>
-                  {effectiveCurrentStep} of {effectiveTotal}
-                </p>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <p style={{
+                    fontSize: 12,
+                    fontWeight: 700,
+                    letterSpacing: '0.14em',
+                    textTransform: 'uppercase',
+                    color: tokens.colors.foregroundMuted,
+                  }}>
+                    {section}
+                  </p>
+                  <p style={{
+                    fontSize: tokens.typography.scale.xs,
+                    fontWeight: 500,
+                    color: tokens.colors.foregroundMuted,
+                  }}>
+                    {effectiveCurrentStep} of {effectiveTotal}
+                  </p>
+                </div>
               </div>
 
               <h1
