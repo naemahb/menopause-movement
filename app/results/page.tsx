@@ -1821,9 +1821,11 @@ function EmailGate({ onUnlock }: { onUnlock: () => void }) {
           <h2 style={{ fontSize: 'clamp(28px, 4vw, 48px)', color: 'white', lineHeight: 1.1, letterSpacing: '-0.025em', marginBottom: 20 }}>
             Your plan is ready
           </h2>
-          <p style={{ fontSize: tokens.typography.scale.base, color: 'rgba(255,255,255,0.6)', lineHeight: 1.7, marginBottom: 20 }}>
-            This is an early version of Menopause Movement. Leave your email and I'll reach out for feedback — what resonated, what was missing, what could be clearer. Your input will directly shape where this goes next.
-          </p>
+          <div style={{ backgroundColor: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '20px 24px', marginBottom: 20 }}>
+            <p style={{ fontSize: tokens.typography.scale.base, color: 'rgba(255,255,255,0.7)', lineHeight: 1.7 }}>
+              This is an early version of Menopause Movement. Leave your email and I'll reach out for feedback — what resonated, what was missing, what could be clearer. Your input will directly shape where this goes next.
+            </p>
+          </div>
           <p style={{ fontSize: tokens.typography.scale.base, color: 'rgba(255,255,255,0.6)', lineHeight: 1.7 }}>
             Your data is private. I will never sell or share it.
           </p>
