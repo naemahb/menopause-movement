@@ -31,7 +31,7 @@ const STEP_SECTION: Record<string, string> = {
   medicalConditions:'Health',
 }
 
-const SECTION_ORDER = ['Stage & Age', 'Symptoms', 'Goal', 'Setup', 'Health']
+const SECTION_ORDER = ['Stage & Age', 'Symptoms', 'Setup', 'Goal', 'Health']
 
 const SECTION_BG: Record<string, string> = {
   'Stage & Age': '#f5f3ef',
