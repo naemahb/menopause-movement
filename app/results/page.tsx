@@ -1822,6 +1822,16 @@ function EmailGate({ onUnlock }: { onUnlock: () => void }) {
             Your plan is ready
           </h2>
           <div style={{ backgroundColor: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '20px 24px', marginBottom: 20 }}>
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true" style={{ marginBottom: 14, opacity: 0.6 }}>
+              {/* Stem */}
+              <line x1="16" y1="28" x2="16" y2="14" stroke="white" strokeWidth="1.2" strokeLinecap="round" />
+              {/* Left leaf */}
+              <path d="M16 20 C12 18 8 14 10 10 C12 8 16 12 16 16" stroke="white" strokeWidth="1.2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+              {/* Right leaf */}
+              <path d="M16 18 C20 16 24 12 22 8 C20 6 16 10 16 14" stroke="white" strokeWidth="1.2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+              {/* Top sprout */}
+              <path d="M16 14 C16 10 14 7 16 5 C18 7 16 10 16 14" stroke="white" strokeWidth="1.1" fill="none" strokeLinecap="round" />
+            </svg>
             <p style={{ fontSize: tokens.typography.scale.base, color: 'rgba(255,255,255,0.7)', lineHeight: 1.7 }}>
               This is an early version of Menopause Movement. Leave your email and I'll reach out for feedback — what resonated, what was missing, what could be clearer. Your input will directly shape where this goes next.
             </p>
