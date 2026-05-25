@@ -128,7 +128,7 @@ export default function Home() {
     <div style={{ backgroundColor: tokens.colors.background }}>
 
       {/* ── HERO ──────────────────────────────────────────────────────────────── */}
-      <section style={{ backgroundColor: FOREST_GREEN, minHeight: '100vh', display: 'flex', alignItems: 'flex-end', position: 'relative', overflow: 'hidden' }}>
+      <section className="landing-hero" style={{ backgroundColor: FOREST_GREEN, minHeight: '100vh', display: 'flex', alignItems: 'flex-end', position: 'relative', overflow: 'hidden' }}>
         <div
           style={{ position: 'absolute', right: 0, bottom: 0, width: 260, opacity: 0.55, pointerEvents: 'none' }}
           className="landing-botanical"
