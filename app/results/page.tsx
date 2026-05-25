@@ -2184,6 +2184,31 @@ function downloadPDF(sections: Section[]) {
         true,
       )
 
+    // ── YOUR STRESS & CORTISOL ───────────────────────────────────────────────
+    } else if (section.heading === 'Your Stress & Cortisol') {
+      const introLine = section.content.split(/\n+/).find((l: string) => !l.startsWith('**') && !l.startsWith('-') && l.length > 20)?.trim() ?? ''
+      const tips = parseKV(section.content)
+
+      if (introLine) {
+        const introLines = doc.splitTextToSize(introLine, W)
+        guard(introLines.length * 13 + 16)
+        doc.setFontSize(9.5); doc.setFont('helvetica', 'normal'); t(40, 40, 40)
+        doc.text(introLines, M, y)
+        y += introLines.length * 13 + 16
+      }
+
+      const gap = 10; const cW = (W - gap) / 2; const PAD = 14
+      let panelH = 0
+      for (let i = 0; i < tips.length; i += 2) {
+        const l = tips[i]; const r = tips[i + 1]
+        const lL = doc.splitTextToSize(l.body, cW - PAD * 2)
+        const rL = r ? doc.splitTextToSize(r.body, cW - PAD * 2) : []
+        panelH += Math.max(PAD + 14 + 8 + lL.length * 12 + PAD, r ? PAD + 14 + 8 + rL.length * 12 + PAD : 0, 48) + gap
+      }
+      guard(panelH + 20)
+      f(232, 221, 216); doc.roundedRect(M - 16, y - 10, W + 32, panelH + 16, 8, 8, 'F')
+      twoColCards(tips, () => [245, 238, 234], [60, 40, 35], [100, 80, 75], false)
+
     // ── YOUR SLEEP & RECOVERY ─────────────────────────────────────────────────
     } else if (section.heading === 'Your Sleep & Recovery') {
       const tips = parseKV(section.content)
