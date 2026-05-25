@@ -110,6 +110,7 @@ const SECTION_HEADINGS = [
   'Your First Week Focus',
   'Your 4-Week Progression',
   'Your Protein Target',
+  'Your Stress & Cortisol',
   'Your Sleep & Recovery',
 ]
 
@@ -329,6 +330,27 @@ function SkProtein() {
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
           {[0,1,2].map(i => <div key={i} className="sk" style={{ height: 130, backgroundColor: 'rgba(255,255,255,0.45)', borderRadius: 14 }} />)}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function SkCortisol() {
+  const b = 'rgba(0,0,0,0.08)'
+  return (
+    <section style={{ backgroundColor: tokens.colors.surfaceBlush }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '80px 32px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 48, alignItems: 'center', marginBottom: 52 }} className="results-two-col">
+          <div className="sk" style={{ width: 80, height: 80, borderRadius: '50%', backgroundColor: b, margin: '0 auto' }} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <Sk w={80} h={9} r={3} c={b} />
+            <Sk w={280} h={34} r={7} c={b} />
+          </div>
+        </div>
+        <Sk w="80%" h={14} r={4} c={b} style={{ marginBottom: 32 }} />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
+          {[0,1,2].map(i => <div key={i} className="sk" style={{ height: 130, backgroundColor: 'rgba(255,255,255,0.4)', borderRadius: 14 }} />)}
         </div>
       </div>
     </section>
@@ -1437,6 +1459,111 @@ function ProteinSection({ content }: { content: string }) {
 }
 
 // =============================================================================
+// Stress & Cortisol section
+// =============================================================================
+
+function IllustrationBreathRings() {
+  return (
+    <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <circle cx="60" cy="60" r="10" stroke={tokens.colors.foreground} strokeWidth="1.5" opacity="0.7" />
+      <circle cx="60" cy="60" r="24" stroke={tokens.colors.foreground} strokeWidth="1.2" opacity="0.4" />
+      <circle cx="60" cy="60" r="38" stroke={tokens.colors.foreground} strokeWidth="1" opacity="0.22" />
+      <circle cx="60" cy="60" r="52" stroke={tokens.colors.foreground} strokeWidth="0.75" opacity="0.1" />
+      <circle cx="60" cy="50" r="2" fill={tokens.colors.foreground} opacity="0.45" />
+      <circle cx="70" cy="60" r="2" fill={tokens.colors.foreground} opacity="0.45" />
+      <circle cx="60" cy="70" r="2" fill={tokens.colors.foreground} opacity="0.45" />
+      <circle cx="50" cy="60" r="2" fill={tokens.colors.foreground} opacity="0.45" />
+    </svg>
+  )
+}
+
+function CortisolSection({ content }: { content: string }) {
+  const lines = content.split(/\n+/)
+  const intro = lines.find(l => !l.startsWith('**') && !l.startsWith('-') && l.length > 20)?.trim() ?? ''
+  const tips = lines
+    .map((line) => {
+      const match = line.match(/^\*\*(.+?)\*\*[:\s]+(.+)$/)
+      if (match) return { title: match[1].trim(), body: match[2].trim() }
+      return null
+    })
+    .filter(Boolean) as { title: string; body: string }[]
+
+  return (
+    <section style={{ backgroundColor: tokens.colors.surfaceBlush }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '80px 32px' }}>
+        <div
+          style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 48, alignItems: 'center', marginBottom: 48 }}
+          className="results-two-col"
+        >
+          <div style={{ display: 'flex', justifyContent: 'center', opacity: 0.55 }}>
+            <div style={{ width: 100, height: 100 }}>
+              <IllustrationBreathRings />
+            </div>
+          </div>
+          <div>
+            <p style={{
+              fontSize: tokens.typography.scale.xs,
+              fontWeight: 700,
+              letterSpacing: '0.15em',
+              textTransform: 'uppercase',
+              color: tokens.colors.foregroundMuted,
+              marginBottom: 16,
+            }}>
+              Cortisol & stress
+            </p>
+            <h2 style={{
+              fontSize: 'clamp(28px, 3vw, 42px)',
+              color: tokens.colors.foreground,
+              lineHeight: 1.15,
+              letterSpacing: '-0.025em',
+            }}>
+              Your stress & cortisol load
+            </h2>
+          </div>
+        </div>
+
+        {intro && (
+          <p style={{
+            fontSize: tokens.typography.scale.lg,
+            color: tokens.colors.foreground,
+            lineHeight: 1.7,
+            marginBottom: 36,
+            maxWidth: 720,
+          }}>
+            {intro}
+          </p>
+        )}
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
+          {tips.map((tip, i) => (
+            <div key={i} style={{
+              backgroundColor: 'rgba(255,255,255,0.6)',
+              borderRadius: 14,
+              padding: '22px 24px 28px',
+              border: `1px solid ${tokens.colors.border}`,
+            }}>
+              <p style={{
+                fontSize: tokens.typography.scale.xs,
+                fontWeight: 700,
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                color: tokens.colors.foregroundMuted,
+                marginBottom: 10,
+              }}>
+                {tip.title}
+              </p>
+              <p style={{ fontSize: tokens.typography.scale.base, color: tokens.colors.foreground, lineHeight: 1.65 }}>
+                {tip.body}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// =============================================================================
 // Sleep & Recovery section
 // =============================================================================
 
@@ -2195,6 +2322,7 @@ export default function ResultsPage() {
   const firstWeek = get('Your First Week Focus')
   const progression = get('Your 4-Week Progression')
   const protein = get('Your Protein Target')
+  const cortisol = get('Your Stress & Cortisol')
   const sleep = get('Your Sleep & Recovery')
 
   // Hold the weekly skeleton until all 7 days are parsed, or fall back to
@@ -2244,6 +2372,7 @@ export default function ResultsPage() {
           {firstWeek ? <FadeIn><FirstWeekSection content={firstWeek.content} /></FadeIn> : <SkFirstWeek />}
           {progression ? <FadeIn><ProgressionSection content={progression.content} /></FadeIn> : <SkProgression />}
           {protein ? <FadeIn><ProteinSection content={protein.content} /></FadeIn> : <SkProtein />}
+          {cortisol ? <FadeIn><CortisolSection content={cortisol.content} /></FadeIn> : <SkCortisol />}
           {sleep ? <FadeIn><SleepSection content={sleep.content} /></FadeIn> : <SkSleep />}
         </>
       )}

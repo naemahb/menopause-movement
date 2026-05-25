@@ -229,6 +229,7 @@ OUTPUT FORMAT — write these sections with these exact headings, in this exact 
 ## Your First Week Focus
 ## Your 4-Week Progression
 ## Your Protein Target
+## Your Stress & Cortisol
 ## Your Sleep & Recovery
 
 Rules:
@@ -238,6 +239,7 @@ Rules:
 - "Your First Week Focus": 2–3 sentences. One clear priority for week 1 only. Be specific about what she should pay attention to and why — give her a concrete signal that tells her the week worked.
 - "Your 4-Week Progression": 4 items, one per week. Format each as "**Week N — Title**: description." Show how volume, load, or complexity progresses. Week 4 should include a deload and a self-assessment prompt. Be specific — reference her actual plan, not generic advice.
 - "Your Protein Target": Start with the gram target on its own line, then exactly 3 tips formatted as "**Short title (2-4 words)**: one sentence." Cover: (1) eat 30–40g within 30 min of waking; (2) spread protein across 3–4 meals; (3) 20–40g post-workout. Then one final line starting with "**Sources:**" listing protein foods for her dietary pattern. Explicitly address intermittent fasting: Dr. Stacy Sims is clear that skipping breakfast extends overnight muscle catabolism and is counterproductive for women in menopause.
+- "Your Stress & Cortisol": One opening sentence naming her cortisol risk level and the primary driver. Then exactly 3 tips formatted as "**Short title (2-4 words)**: Full recommendation." Cover: (1) how her current training intensity relates to cortisol — be specific about what to change; (2) the single highest-leverage daily behavioral tool (Zone 2 walks, meal timing, or post-workout nutrition depending on her answers); (3) one lifestyle lever tied to her specific stress level or energy. Tailor to her cortisol risk (${cortisolRisk}) and stress level (${stressLabel}). Do not skip this section.
 - "Your Sleep & Recovery": Exactly 4 tips. Format each as "**Short title (2-4 words)**: Full recommendation." Tailor to her sleep quality (${sleepLabel}), stress level, and hot flash severity. Include at least one thing she can do tonight. No intro sentence — go straight into the tips.
 
 Tone: Warm but authoritative. Like a knowledgeable friend who also happens to be an expert. Not clinical. Not preachy. Direct. She answered 17 questions — give her the depth she earned.`
@@ -287,6 +289,13 @@ This week, your only job is to take one full rest day between every strength ses
 **Spread across 3–4 meals**: Muscles can only use ~30–40g at a time for protein synthesis — loading it all at dinner leaves most of it unused for recovery.
 **Post-workout window**: Eat 20–40g within 60 minutes of finishing a strength session when your muscle cells are most receptive.
 **Sources:** Greek yogurt, eggs, chicken, salmon, cottage cheese, protein powder to close the gap.
+
+## Your Stress & Cortisol
+Your cortisol risk is moderate-to-high — the combination of high life stress, variable energy, and current training intensity is creating a hormonal environment that actively works against fat loss and recovery.
+
+**Lower your training ceiling**: Two intense sessions per week is your ceiling right now, not your floor. More high-intensity work when cortisol is already elevated accelerates belly fat storage and muscle breakdown — the exact opposite of what you're trying to achieve.
+**Zone 2 is your medicine**: A 20–30 minute walk at conversational pace every day is the single most evidence-based cortisol intervention available. It lowers cortisol directly, improves mitochondrial function, and stabilizes blood glucose — all without adding to your stress load.
+**Eat within 45 minutes post-workout**: Fasted training with high life stress doubles the cortisol spike. A protein-rich meal or shake immediately after strength sessions blunts cortisol and shifts your body toward recovery instead of breakdown.
 
 ## Your Sleep & Recovery
 **Cool your bedroom**: Keep it at 65–68°F (18–20°C) — this is especially important if night sweats are waking you. A cooler core temperature is one of the most effective non-pharmaceutical interventions for menopause-related sleep disruption.
