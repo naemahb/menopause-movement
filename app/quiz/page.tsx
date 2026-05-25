@@ -122,8 +122,8 @@ export default function QuizPage() {
   const router = useRouter()
   const { formState, updateForm, getCortisolScore } = useQuiz()
   const [currentStepIndex, setCurrentStepIndex] = useState(0)
-  const [transitionSection, setTransitionSection] = useState<string | null>(null)
-  const [pendingAdvanceIndex, setPendingAdvanceIndex] = useState<number | null>(null)
+  const [transitionSection, setTransitionSection] = useState<string | null>('Stage & Age')
+  const [pendingAdvanceIndex, setPendingAdvanceIndex] = useState<number | null>(0)
 
   const currentStepKey = STEP_ORDER[currentStepIndex]
 
@@ -150,8 +150,9 @@ export default function QuizPage() {
     if (nextIndex < STEP_ORDER.length) {
       const nextSection = STEP_SECTION[STEP_ORDER[nextIndex]]
       if (nextSection !== STEP_SECTION[currentStepKey]) {
+        setCurrentStepIndex(nextIndex)        // advance immediately so new question is ready under card
         setTransitionSection(nextSection)
-        setPendingAdvanceIndex(nextIndex)
+        setPendingAdvanceIndex(nextIndex)     // drives the dismiss timer
       } else {
         setCurrentStepIndex(nextIndex)
       }
@@ -165,7 +166,6 @@ export default function QuizPage() {
   useEffect(() => {
     if (pendingAdvanceIndex === null) return
     const t = setTimeout(() => {
-      setCurrentStepIndex(pendingAdvanceIndex)
       setPendingAdvanceIndex(null)
       setTransitionSection(null)
     }, 1700)
