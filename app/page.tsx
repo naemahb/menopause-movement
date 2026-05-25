@@ -151,7 +151,7 @@ export default function Home() {
             <p style={{ fontSize: tokens.typography.scale.lg, color: 'rgba(255,255,255,0.6)', lineHeight: 1.65, maxWidth: 460, marginBottom: 44 }}>
               Answer 16 questions. Get a complete weekly workout plan built for your stage, your body, and your life — based on the latest exercise science for women in menopause.
             </p>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
+            <div className="hero-cta-row" style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
               <motion.button
                 type="button"
                 onClick={() => router.push('/quiz')}

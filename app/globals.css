@@ -69,6 +69,7 @@ h5 { font-size: 14px; }
 
 @media (max-width: 680px) {
   .landing-botanical { display: none; }
+  .hero-cta-row { justify-content: center; }
   .hero-cta-tagline { width: 100%; text-align: center; }
 }
 
