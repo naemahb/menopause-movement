@@ -360,6 +360,7 @@ type ProfileGroup = { label: string; values: string[] }
 
 function ProfileBanner() {
   const [groups, setGroups] = useState<ProfileGroup[]>([])
+  const [expanded, setExpanded] = useState(false)
 
   useEffect(() => {
     try {
@@ -409,62 +410,81 @@ function ProfileBanner() {
 
   if (!groups.length) return null
 
+  const summary = groups.flatMap(g => g.values.slice(0, 1)).join(' · ')
+
   return (
-    <div style={{ backgroundColor: FOREST_GREEN, borderBottom: '1px solid rgba(255,255,255,0.07)', padding: '20px 32px' }}>
+    <div style={{ backgroundColor: FOREST_GREEN, borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
       <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-        <p style={{
-          fontSize: 12,
-          fontWeight: 700,
-          letterSpacing: '0.15em',
-          textTransform: 'uppercase',
-          color: 'rgba(255,255,255,0.3)',
-          marginBottom: 14,
-        }}>
-          Your profile
-        </p>
-        <div style={{ display: 'flex', gap: 0, flexWrap: 'wrap' }} className="profile-groups">
-          {groups.map((group, i) => (
-            <div
-              key={group.label}
-              className={`profile-group${group.label === 'Health' ? ' profile-group-full' : ''}`}
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 6,
-                paddingLeft: i === 0 ? 0 : 28,
-                paddingRight: 28,
-                borderLeft: i > 0 ? '1px solid rgba(255,255,255,0.12)' : 'none',
-              }}
-            >
-              <span style={{
-                fontSize: 12,
-                fontWeight: 700,
-                letterSpacing: '0.15em',
-                textTransform: 'uppercase',
-                color: 'rgba(255,255,255,0.3)',
-              }}>
-                {group.label}
+        {/* Collapsed header — always visible */}
+        <button
+          onClick={() => setExpanded(e => !e)}
+          style={{
+            width: '100%', display: 'flex', alignItems: 'center',
+            justifyContent: 'space-between', gap: 16,
+            padding: '14px 32px', background: 'none', border: 'none', cursor: 'pointer',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, minWidth: 0 }}>
+            <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', flexShrink: 0 }}>
+              Your profile
+            </span>
+            {!expanded && (
+              <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {summary}
               </span>
-              <div style={
-                group.label === 'Health' && group.values.length > 2
-                  ? { display: 'grid', gridTemplateColumns: 'repeat(3, auto)', columnGap: 20, rowGap: 2 }
-                  : { display: 'flex', flexDirection: 'column', gap: 2 }
-              }>
-                {group.values.map((v) => (
-                  <span key={v} style={{
-                    fontSize: 14,
-                    fontWeight: 500,
-                    color: 'rgba(255,255,255,0.72)',
-                    lineHeight: 1.4,
-                    whiteSpace: 'nowrap',
-                  }}>
-                    {v}
-                  </span>
-                ))}
+            )}
+          </div>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.35)', flexShrink: 0 }}>
+            {expanded ? 'Hide' : 'View details'}
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.25s ease' }}>
+              <path d="M2 4l4 4 4-4" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </span>
+        </button>
+
+        {/* Expandable details */}
+        <AnimatePresence initial={false}>
+          {expanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
+              style={{ overflow: 'hidden' }}
+            >
+              <div style={{ padding: '4px 32px 20px' }}>
+                <div style={{ display: 'flex', gap: 0, flexWrap: 'wrap' }} className="profile-groups">
+                  {groups.map((group, i) => (
+                    <div
+                      key={group.label}
+                      className={`profile-group${group.label === 'Health' ? ' profile-group-full' : ''}`}
+                      style={{
+                        display: 'flex', flexDirection: 'column', gap: 6,
+                        paddingLeft: i === 0 ? 0 : 28, paddingRight: 28,
+                        borderLeft: i > 0 ? '1px solid rgba(255,255,255,0.12)' : 'none',
+                      }}
+                    >
+                      <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)' }}>
+                        {group.label}
+                      </span>
+                      <div style={
+                        group.label === 'Health' && group.values.length > 2
+                          ? { display: 'grid', gridTemplateColumns: 'repeat(3, auto)', columnGap: 20, rowGap: 2 }
+                          : { display: 'flex', flexDirection: 'column', gap: 2 }
+                      }>
+                        {group.values.map((v) => (
+                          <span key={v} style={{ fontSize: 14, fontWeight: 500, color: 'rgba(255,255,255,0.72)', lineHeight: 1.4, whiteSpace: 'nowrap' }}>
+                            {v}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   )
