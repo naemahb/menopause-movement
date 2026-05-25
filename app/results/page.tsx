@@ -1794,6 +1794,11 @@ function EmailGate({ onUnlock }: { onUnlock: () => void }) {
     onUnlock()
   }
 
+  const handleSkip = () => {
+    localStorage.setItem('mm_email_captured', '1')
+    onUnlock()
+  }
+
   const inputStyle: React.CSSProperties = {
     width: '100%',
     padding: '14px 16px',
@@ -1816,14 +1821,17 @@ function EmailGate({ onUnlock }: { onUnlock: () => void }) {
           <h2 style={{ fontSize: 'clamp(28px, 4vw, 48px)', color: 'white', lineHeight: 1.1, letterSpacing: '-0.025em', marginBottom: 20 }}>
             Your plan is ready
           </h2>
+          <p style={{ fontSize: tokens.typography.scale.base, color: 'rgba(255,255,255,0.6)', lineHeight: 1.7, marginBottom: 20 }}>
+            This is an early version of Menopause Movement. Leave your email and I'll reach out for feedback — what resonated, what was missing, what could be clearer. Your input will directly shape where this goes next.
+          </p>
           <p style={{ fontSize: tokens.typography.scale.base, color: 'rgba(255,255,255,0.6)', lineHeight: 1.7 }}>
-            Where should we send it? You'll get your weekly schedule, 4-week progression, protein targets, and sleep protocol — all based on your answers. We'll also email you a copy so you can refer back to it.
+            Your data is private. I will never sell or share it.
           </p>
         </div>
         <div>
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <input type="text" placeholder="First name (optional)" value={name} onChange={(e) => setName(e.target.value)} style={inputStyle} />
-            <input type="email" placeholder="Your email address" value={email} onChange={(e) => setEmail(e.target.value)} required style={inputStyle} />
+            <input type="email" placeholder="Your email address" value={email} onChange={(e) => setEmail(e.target.value)} style={inputStyle} />
             {fieldError && (
               <p style={{ fontSize: tokens.typography.scale.xs, color: tokens.colors.warning }}>{fieldError}</p>
             )}
@@ -1846,9 +1854,12 @@ function EmailGate({ onUnlock }: { onUnlock: () => void }) {
               {submitting ? 'One moment…' : 'See my full plan →'}
             </button>
           </form>
-          <p style={{ fontSize: tokens.typography.scale.xs, color: 'rgba(255,255,255,0.3)', marginTop: 16, textAlign: 'center' }}>
-            No spam. Unsubscribe any time.
-          </p>
+          <button
+            onClick={handleSkip}
+            style={{ display: 'block', width: '100%', marginTop: 16, background: 'none', border: 'none', cursor: 'pointer', fontSize: tokens.typography.scale.sm, color: 'rgba(255,255,255,0.3)', textAlign: 'center' }}
+          >
+            Skip for now, just show me my plan
+          </button>
         </div>
       </div>
     </section>

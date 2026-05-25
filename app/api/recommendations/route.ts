@@ -3,6 +3,7 @@ import { headers } from 'next/headers'
 import type { QuizFormState, BodyFrustration } from '@/lib/types'
 import { getCortisolRiskLevel } from '@/lib/scoring'
 import { checkRateLimit } from '@/lib/ratelimit'
+import { getSupabase } from '@/lib/supabase'
 
 const client = new Anthropic()
 
@@ -313,7 +314,7 @@ export async function POST(request: Request) {
     })
   }
 
-  const useMock = process.env.ANTHROPIC_API_KEY === 'your_key_here' || !process.env.ANTHROPIC_API_KEY
+  const useMock = process.env.USE_MOCK === 'true' || process.env.ANTHROPIC_API_KEY === 'your_key_here' || !process.env.ANTHROPIC_API_KEY
 
   if (useMock) {
     const encoder = new TextEncoder()
@@ -348,12 +349,22 @@ export async function POST(request: Request) {
 
   const readable = new ReadableStream({
     async start(controller) {
+      let fullText = ''
       for await (const chunk of stream) {
         if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
+          fullText += chunk.delta.text
           controller.enqueue(encoder.encode(chunk.delta.text))
         }
       }
       controller.close()
+
+      try {
+        await getSupabase()
+          .from('quiz_results')
+          .insert({ quiz_answers: answers, generated_plan: fullText })
+      } catch (e) {
+        console.error('[supabase] save quiz result error:', e)
+      }
     },
   })
 
