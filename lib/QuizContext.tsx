@@ -6,14 +6,21 @@ import { calculateCortisolScore } from './scoring'
 
 const initialFormState: QuizFormState = {
   stage: null,
+  age: null,
+  menstrualStatus: null,
+  hrtStatus: null,
+  hotFlashSeverity: null,
   exerciseType: null,
   jointPain: null,
+  stressLevel: null,
   energyLevel: null,
   sleepQuality: null,
   timeAvailable: null,
   equipment: null,
   primaryGoal: null,
-  bodyFrustration: null,
+  bodyFrustration: [],
+  weightBracket: null,
+  dietaryPattern: null,
   medicalConditions: [],
 }
 

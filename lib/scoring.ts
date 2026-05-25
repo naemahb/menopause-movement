@@ -3,26 +3,33 @@ import type { QuizFormState } from './types'
 export function calculateCortisolScore(form: QuizFormState): number {
   let score = 0
 
-  // Q2: Exercise type
+  // Exercise type
   if (form.exerciseType === 'cardio_heavy') score += 2
 
-  // Q4: Energy level
+  // Stress level — largest new signal for cortisol
+  if (form.stressLevel === 'overwhelming') score += 3
+  else if (form.stressLevel === 'high') score += 2
+  else if (form.stressLevel === 'moderate') score += 1
+
+  // Energy level
   if (form.energyLevel === 'exhausted') score += 2
   else if (form.energyLevel === 'low') score += 1
 
-  // Q5: Sleep quality
+  // Sleep quality
   if (form.sleepQuality === 'very_poor') score += 2
   else if (form.sleepQuality === 'poor') score += 1
 
-  // Q9: Body frustration
-  if (form.bodyFrustration === 'belly_fat') score += 2
+  // Hot flashes (vasomotor symptoms elevate cortisol and disrupt sleep)
+  if (form.hotFlashSeverity === 'severe') score += 1
+
+  // Body frustration (belly fat is a cortisol signal)
+  if (form.bodyFrustration.includes('belly_fat')) score += 2
 
   // Medical screener (max +2)
   const medicalConditions = form.medicalConditions
   let medicalScore = 0
   if (medicalConditions.includes('thyroid')) medicalScore += 1
   if (medicalConditions.includes('autoimmune')) medicalScore += 1
-  if (medicalConditions.includes('ckd')) medicalScore += 1
   score += Math.min(medicalScore, 2)
 
   return Math.min(score, 10)

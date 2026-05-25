@@ -35,7 +35,7 @@ export function SelectOption({ label, subtext, selected, onSelect, multi = false
         style={{
           width: 24,
           height: 24,
-          borderRadius: '50%',
+          borderRadius: multi ? 6 : '50%',
           border: selected ? 'none' : `2px solid ${tokens.colors.border}`,
           backgroundColor: selected ? tokens.colors.foreground : 'transparent',
           transition: 'background-color 0.15s ease, border 0.15s ease',

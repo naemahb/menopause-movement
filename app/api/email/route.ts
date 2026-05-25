@@ -1,19 +1,20 @@
+import { supabase } from '@/lib/supabase'
+
 export async function POST(request: Request) {
-  const { email, name } = await request.json()
+  const { email, name, quizAnswers } = await request.json()
 
   if (!email || !email.includes('@')) {
     return Response.json({ error: 'Valid email required' }, { status: 400 })
   }
 
-  // TODO: Connect to your email provider (ConvertKit, Mailchimp, etc.)
-  // Example ConvertKit:
-  //   await fetch('https://api.convertkit.com/v3/forms/<FORM_ID>/subscribe', {
-  //     method: 'POST',
-  //     headers: { 'Content-Type': 'application/json' },
-  //     body: JSON.stringify({ api_key: process.env.CONVERTKIT_API_KEY, email, first_name: name }),
-  //   })
+  const { error } = await supabase
+    .from('subscribers')
+    .upsert({ email, name: name || null, quiz_answers: quizAnswers || null })
 
-  console.log(`[email capture] name=${name ?? 'n/a'} email=${email}`)
+  if (error) {
+    console.error('[supabase] insert error:', error.message)
+    return Response.json({ error: 'Failed to save subscriber' }, { status: 500 })
+  }
 
   return Response.json({ ok: true })
 }

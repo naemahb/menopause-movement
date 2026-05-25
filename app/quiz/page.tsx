@@ -1,28 +1,33 @@
 'use client'
 
-import { useState, useCallback, Fragment } from 'react'
+import { useState, useCallback, useMemo, useEffect, useRef, Fragment } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft } from 'lucide-react'
 import { useQuiz } from '@/lib/QuizContext'
-import { calculateCortisolScore } from '@/lib/scoring'
 import { ProgressBar } from '@/components/quiz/ProgressBar'
 import { SelectOption } from '@/components/quiz/SelectOption'
-import { Chip } from '@/components/quiz/Chip'
 import { ContinueButton } from '@/components/quiz/ContinueButton'
 import { tokens } from '@/lib/tokens'
-import type { MedicalCondition } from '@/lib/types'
+import type { MedicalCondition, BodyFrustration } from '@/lib/types'
 
 const STEP_ORDER = [
   'stage',
+  'age',
+  'menstrualStatus',   // skipped for postmenopause
+  'hrtStatus',
+  'hotFlashSeverity',
   'exerciseType',
   'jointPain',
+  'stressLevel',
   'energyLevel',
   'sleepQuality',
   'timeAvailable',
   'equipment',
   'primaryGoal',
   'bodyFrustration',
+  'weightBracket',
+  'dietaryPattern',
   'medicalConditions',
 ] as const
 
@@ -34,31 +39,56 @@ export default function QuizPage() {
   const [currentStepIndex, setCurrentStepIndex] = useState(0)
 
   const currentStepKey = STEP_ORDER[currentStepIndex]
-  const totalSteps = STEP_ORDER.length
 
-  const goBack = useCallback(() => {
-    if (currentStepIndex > 0) {
-      setCurrentStepIndex((i) => i - 1)
-    } else {
-      router.push('/')
-    }
-  }, [currentStepIndex, router])
+  // Steps that should be skipped based on current form state
+  const skippedSteps = useMemo(() => {
+    const skipped = new Set<StepKey>()
+    if (formState.stage === 'postmenopause') skipped.add('menstrualStatus')
+    return skipped
+  }, [formState.stage])
+
+  const effectiveSteps = useMemo(
+    () => STEP_ORDER.filter((s) => !skippedSteps.has(s)),
+    [skippedSteps]
+  )
+
+  const effectiveTotal = effectiveSteps.length
+  const effectiveCurrentStep = effectiveSteps.indexOf(currentStepKey) + 1
 
   const advance = useCallback(() => {
-    if (currentStepIndex < totalSteps - 1) {
-      setCurrentStepIndex((i) => i + 1)
+    let nextIndex = currentStepIndex + 1
+    while (nextIndex < STEP_ORDER.length && skippedSteps.has(STEP_ORDER[nextIndex])) {
+      nextIndex++
+    }
+    if (nextIndex < STEP_ORDER.length) {
+      setCurrentStepIndex(nextIndex)
     } else {
-      // Save to sessionStorage and go to results
       const cortisolScore = getCortisolScore()
       sessionStorage.setItem('quizAnswers', JSON.stringify({ ...formState, cortisolScore }))
       router.push('/results')
     }
-  }, [currentStepIndex, totalSteps, formState, getCortisolScore, router])
+  }, [currentStepIndex, skippedSteps, formState, getCortisolScore, router])
+
+  // Keep a stable ref so advanceWithDelay always calls the latest advance
+  const advanceRef = useRef(advance)
+  useEffect(() => { advanceRef.current = advance }, [advance])
 
   const advanceWithDelay = useCallback(
-    (ms: number) => setTimeout(advance, ms),
-    [advance]
+    (ms: number) => setTimeout(() => advanceRef.current(), ms),
+    []
   )
+
+  const goBack = useCallback(() => {
+    if (currentStepIndex > 0) {
+      let prevIndex = currentStepIndex - 1
+      while (prevIndex > 0 && skippedSteps.has(STEP_ORDER[prevIndex])) {
+        prevIndex--
+      }
+      setCurrentStepIndex(prevIndex)
+    } else {
+      router.push('/')
+    }
+  }, [currentStepIndex, skippedSteps, router])
 
   // ==========================================================================
   // Step: Stage
@@ -78,7 +108,122 @@ export default function QuizPage() {
               label={opt.label}
               subtext={'subtext' in opt ? opt.subtext : undefined}
               selected={formState.stage === opt.value}
-              onSelect={() => { updateForm({ stage: opt.value }); advanceWithDelay(300) }}
+              onSelect={() => {
+                // Clear menstrualStatus when switching to postmenopause
+                if (opt.value === 'postmenopause') {
+                  updateForm({ stage: opt.value, menstrualStatus: null })
+                } else {
+                  updateForm({ stage: opt.value })
+                }
+                advanceWithDelay(300)
+              }}
+            />
+          </Fragment>
+        ))}
+      </div>
+    )
+  }
+
+  // ==========================================================================
+  // Step: Age
+  // ==========================================================================
+  const renderAgeStep = () => {
+    const options = [
+      { label: 'Under 45', value: 'under_45' as const },
+      { label: '45–49', value: '45_49' as const },
+      { label: '50–54', value: '50_54' as const },
+      { label: '55–59', value: '55_59' as const },
+      { label: '60 or older', value: '60_plus' as const },
+    ]
+    return (
+      <div style={{ backgroundColor: 'white', borderRadius: tokens.radius.card, border: `1px solid ${tokens.colors.border}`, overflow: 'hidden' }}>
+        {options.map((opt, i) => (
+          <Fragment key={opt.value}>
+            {i > 0 && <div style={{ height: 1, backgroundColor: tokens.colors.border }} />}
+            <SelectOption
+              label={opt.label}
+              selected={formState.age === opt.value}
+              onSelect={() => { updateForm({ age: opt.value }); advanceWithDelay(300) }}
+            />
+          </Fragment>
+        ))}
+      </div>
+    )
+  }
+
+  // ==========================================================================
+  // Step: Menstrual status (skipped for postmenopause)
+  // ==========================================================================
+  const renderMenstrualStatusStep = () => {
+    const options = [
+      { label: 'Regular or close to regular', value: 'regular_or_near_regular' as const, subtext: 'Cycles are fairly predictable' },
+      { label: 'Irregular', value: 'irregular' as const, subtext: 'Cycles are unpredictable or skipping months' },
+      { label: 'Very infrequent', value: 'very_rare' as const, subtext: 'Fewer than 4 periods in the past year' },
+      { label: 'No periods', value: 'none' as const, subtext: 'Haven\'t had a period in several months or more' },
+    ]
+    return (
+      <div style={{ backgroundColor: 'white', borderRadius: tokens.radius.card, border: `1px solid ${tokens.colors.border}`, overflow: 'hidden' }}>
+        {options.map((opt, i) => (
+          <Fragment key={opt.value}>
+            {i > 0 && <div style={{ height: 1, backgroundColor: tokens.colors.border }} />}
+            <SelectOption
+              label={opt.label}
+              subtext={opt.subtext}
+              selected={formState.menstrualStatus === opt.value}
+              onSelect={() => { updateForm({ menstrualStatus: opt.value }); advanceWithDelay(300) }}
+            />
+          </Fragment>
+        ))}
+      </div>
+    )
+  }
+
+  // ==========================================================================
+  // Step: HRT status
+  // ==========================================================================
+  const renderHRTStep = () => {
+    const options = [
+      { label: 'Yes — I\'m currently on HRT', value: 'yes_current' as const, subtext: 'Patches, gel, pills, or pellets' },
+      { label: 'No', value: 'no' as const },
+      { label: 'Considering it or recently stopped', value: 'considering_or_stopped' as const },
+      { label: 'Not sure what I\'m on', value: 'not_sure' as const, subtext: 'Taking something but unclear on type' },
+    ]
+    return (
+      <div style={{ backgroundColor: 'white', borderRadius: tokens.radius.card, border: `1px solid ${tokens.colors.border}`, overflow: 'hidden' }}>
+        {options.map((opt, i) => (
+          <Fragment key={opt.value}>
+            {i > 0 && <div style={{ height: 1, backgroundColor: tokens.colors.border }} />}
+            <SelectOption
+              label={opt.label}
+              subtext={'subtext' in opt ? opt.subtext : undefined}
+              selected={formState.hrtStatus === opt.value}
+              onSelect={() => { updateForm({ hrtStatus: opt.value }); advanceWithDelay(300) }}
+            />
+          </Fragment>
+        ))}
+      </div>
+    )
+  }
+
+  // ==========================================================================
+  // Step: Hot flash severity
+  // ==========================================================================
+  const renderHotFlashStep = () => {
+    const options = [
+      { label: 'None — no hot flashes or night sweats', value: 'none' as const },
+      { label: 'Mild — occasional, manageable', value: 'mild' as const },
+      { label: 'Moderate — affect my daily comfort or sleep', value: 'moderate' as const },
+      { label: 'Severe — frequent and significantly disruptive', value: 'severe' as const },
+    ]
+    return (
+      <div style={{ backgroundColor: 'white', borderRadius: tokens.radius.card, border: `1px solid ${tokens.colors.border}`, overflow: 'hidden' }}>
+        {options.map((opt, i) => (
+          <Fragment key={opt.value}>
+            {i > 0 && <div style={{ height: 1, backgroundColor: tokens.colors.border }} />}
+            <SelectOption
+              label={opt.label}
+              selected={formState.hotFlashSeverity === opt.value}
+              onSelect={() => { updateForm({ hotFlashSeverity: opt.value }); advanceWithDelay(300) }}
             />
           </Fragment>
         ))}
@@ -120,7 +265,7 @@ export default function QuizPage() {
   const renderJointPainStep = () => {
     const options = [
       { label: 'No joint pain', value: 'none' as const },
-      { label: 'Mild — some stiffness but it doesn\'t stop me', value: 'mild' as const },
+      { label: "Mild — some stiffness but it doesn't stop me", value: 'mild' as const },
       { label: 'Moderate — I modify workouts because of it', value: 'moderate' as const },
       { label: 'Significant — joint pain is a major barrier', value: 'significant' as const },
     ]
@@ -141,6 +286,32 @@ export default function QuizPage() {
   }
 
   // ==========================================================================
+  // Step: Stress level
+  // ==========================================================================
+  const renderStressStep = () => {
+    const options = [
+      { label: 'Low — life feels generally manageable', value: 'low' as const },
+      { label: 'Moderate — some stress but I cope well', value: 'moderate' as const },
+      { label: "High — I'm dealing with a lot right now", value: 'high' as const },
+      { label: 'Overwhelming — stress is constant and hard to manage', value: 'overwhelming' as const },
+    ]
+    return (
+      <div style={{ backgroundColor: 'white', borderRadius: tokens.radius.card, border: `1px solid ${tokens.colors.border}`, overflow: 'hidden' }}>
+        {options.map((opt, i) => (
+          <Fragment key={opt.value}>
+            {i > 0 && <div style={{ height: 1, backgroundColor: tokens.colors.border }} />}
+            <SelectOption
+              label={opt.label}
+              selected={formState.stressLevel === opt.value}
+              onSelect={() => { updateForm({ stressLevel: opt.value }); advanceWithDelay(300) }}
+            />
+          </Fragment>
+        ))}
+      </div>
+    )
+  }
+
+  // ==========================================================================
   // Step: Energy level
   // ==========================================================================
   const renderEnergyStep = () => {
@@ -148,7 +319,7 @@ export default function QuizPage() {
       { label: 'Good — I feel like myself most days', value: 'good' as const },
       { label: 'Variable — some good days, some crashes', value: 'variable' as const },
       { label: 'Low — fatigue is a constant challenge', value: 'low' as const },
-      { label: 'Exhausted — I\'m running on empty', value: 'exhausted' as const },
+      { label: "Exhausted — I'm running on empty", value: 'exhausted' as const },
     ]
     return (
       <div style={{ backgroundColor: 'white', borderRadius: tokens.radius.card, border: `1px solid ${tokens.colors.border}`, overflow: 'hidden' }}>
@@ -224,7 +395,7 @@ export default function QuizPage() {
   const renderEquipmentStep = () => {
     const options = [
       { label: 'Full gym', value: 'full_gym' as const, subtext: 'Barbells, machines, cables' },
-      { label: 'Home setup', value: 'home_dumbbells' as const, subtext: 'Dumbbells, maybe a bench' },
+      { label: 'Home setup', value: 'home_dumbbells' as const, subtext: 'Dumbbells and/or kettlebells, maybe a bench' },
       { label: 'Minimal', value: 'minimal' as const, subtext: 'Resistance bands, bodyweight only' },
       { label: 'Walking / outdoor only', value: 'outdoor_only' as const },
     ]
@@ -272,14 +443,61 @@ export default function QuizPage() {
   }
 
   // ==========================================================================
-  // Step: Body frustration
+  // Step: Body frustration (multi-select)
   // ==========================================================================
   const renderFrustrationStep = () => {
+    const options: { label: string; value: BodyFrustration }[] = [
+      { label: "Belly fat that won't budge despite working out", value: 'belly_fat' },
+      { label: "Loss of muscle tone even though I'm active", value: 'muscle_tone_loss' },
+      { label: 'Weight gain despite eating the same as before', value: 'weight_gain' },
+      { label: 'I feel fine about my body — just want to stay healthy', value: 'feeling_fine' },
+    ]
+
+    const selected = formState.bodyFrustration
+    const hasSelection = selected.length > 0
+
+    const toggle = (value: BodyFrustration) => {
+      if (value === 'feeling_fine') {
+        updateForm({ bodyFrustration: ['feeling_fine'] })
+      } else {
+        const next = selected.includes(value)
+          ? selected.filter((v) => v !== value)
+          : [...selected.filter((v) => v !== 'feeling_fine'), value]
+        updateForm({ bodyFrustration: next })
+      }
+    }
+
+    return (
+      <>
+        <div style={{ backgroundColor: 'white', borderRadius: tokens.radius.card, border: `1px solid ${tokens.colors.border}`, overflow: 'hidden' }}>
+          {options.map((opt, i) => (
+            <Fragment key={opt.value}>
+              {i > 0 && <div style={{ height: 1, backgroundColor: tokens.colors.border }} />}
+              <SelectOption
+                label={opt.label}
+                selected={selected.includes(opt.value)}
+                onSelect={() => toggle(opt.value)}
+                multi
+              />
+            </Fragment>
+          ))}
+        </div>
+        <div className="mt-6">
+          <ContinueButton onClick={advance} disabled={!hasSelection} label="Continue" />
+        </div>
+      </>
+    )
+  }
+
+  // ==========================================================================
+  // Step: Weight bracket
+  // ==========================================================================
+  const renderWeightStep = () => {
     const options = [
-      { label: 'Belly fat that won\'t budge despite working out', value: 'belly_fat' as const },
-      { label: 'Loss of muscle tone even though I\'m active', value: 'muscle_tone_loss' as const },
-      { label: 'Weight gain despite eating the same as before', value: 'weight_gain' as const },
-      { label: 'I feel fine about my body — just want to stay healthy', value: 'feeling_fine' as const },
+      { label: 'Under 140 lbs', value: 'under_140' as const },
+      { label: '140–169 lbs', value: '140_169' as const },
+      { label: '170–199 lbs', value: '170_199' as const },
+      { label: '200+ lbs', value: '200_plus' as const },
     ]
     return (
       <div style={{ backgroundColor: 'white', borderRadius: tokens.radius.card, border: `1px solid ${tokens.colors.border}`, overflow: 'hidden' }}>
@@ -288,8 +506,34 @@ export default function QuizPage() {
             {i > 0 && <div style={{ height: 1, backgroundColor: tokens.colors.border }} />}
             <SelectOption
               label={opt.label}
-              selected={formState.bodyFrustration === opt.value}
-              onSelect={() => { updateForm({ bodyFrustration: opt.value }); advanceWithDelay(300) }}
+              selected={formState.weightBracket === opt.value}
+              onSelect={() => { updateForm({ weightBracket: opt.value }); advanceWithDelay(300) }}
+            />
+          </Fragment>
+        ))}
+      </div>
+    )
+  }
+
+  // ==========================================================================
+  // Step: Dietary pattern
+  // ==========================================================================
+  const renderDietaryStep = () => {
+    const options = [
+      { label: 'I eat meat and dairy', value: 'omnivore' as const },
+      { label: 'No meat, but I eat fish', value: 'pescatarian' as const },
+      { label: 'Vegetarian — I eat dairy and/or eggs', value: 'vegetarian' as const },
+      { label: 'Vegan — no animal products', value: 'vegan' as const },
+    ]
+    return (
+      <div style={{ backgroundColor: 'white', borderRadius: tokens.radius.card, border: `1px solid ${tokens.colors.border}`, overflow: 'hidden' }}>
+        {options.map((opt, i) => (
+          <Fragment key={opt.value}>
+            {i > 0 && <div style={{ height: 1, backgroundColor: tokens.colors.border }} />}
+            <SelectOption
+              label={opt.label}
+              selected={formState.dietaryPattern === opt.value}
+              onSelect={() => { updateForm({ dietaryPattern: opt.value }); advanceWithDelay(300) }}
             />
           </Fragment>
         ))}
@@ -302,12 +546,15 @@ export default function QuizPage() {
   // ==========================================================================
   const renderMedicalStep = () => {
     const options: { label: string; value: MedicalCondition; subtext?: string }[] = [
+      { label: 'High blood pressure (hypertension)', value: 'hypertension' },
+      { label: 'Type 2 diabetes', value: 'diabetes' },
+      { label: 'Pre-diabetes or insulin resistance', value: 'prediabetes' },
       { label: 'Thyroid condition', value: 'thyroid', subtext: 'Hypo or hyperthyroidism' },
       { label: 'Autoimmune disease', value: 'autoimmune' },
-      { label: 'Chronic kidney disease (CKD)', value: 'ckd' },
       { label: 'Arthritis — knees', value: 'arthritis_knees' },
       { label: 'Arthritis — lower back / spine', value: 'arthritis_back' },
       { label: 'Arthritis — hips', value: 'arthritis_hips' },
+      { label: 'Arthritis — shoulders', value: 'arthritis_shoulders' },
       { label: 'Osteopenia or osteoporosis', value: 'osteopenia_osteoporosis' },
       { label: 'None of the above', value: 'none' },
     ]
@@ -355,23 +602,44 @@ export default function QuizPage() {
   const getStepConfig = (): { question: string; subtext?: string } => {
     const configs: Record<StepKey, { question: string; subtext?: string }> = {
       stage: { question: 'Where are you in your menopause journey?' },
+      age: {
+        question: 'How old are you?',
+        subtext: 'Helps calibrate your bone density and training intensity recommendations',
+      },
+      menstrualStatus: { question: "What's your current cycle like?" },
+      hrtStatus: {
+        question: 'Are you currently on hormone therapy (HRT)?',
+        subtext: 'Including patches, gels, pills, pellets, or vaginal estrogen',
+      },
+      hotFlashSeverity: {
+        question: 'How would you describe your hot flashes and night sweats?',
+      },
       exerciseType: {
         question: 'What does your current exercise routine look like?',
         subtext: 'The type of exercise matters more than how often',
       },
       jointPain: { question: 'How would you describe your joint pain or physical discomfort?' },
+      stressLevel: {
+        question: 'How would you describe your stress levels lately?',
+        subtext: 'Stress raises cortisol just like exercise does — it shapes your whole plan',
+      },
       energyLevel: { question: 'How are your energy levels on most days?' },
       sleepQuality: { question: 'How is your sleep most nights?' },
       timeAvailable: {
         question: 'How much time can you realistically commit to exercise each week?',
-        subtext: 'Be honest — plans that don\'t fit real life don\'t get followed',
+        subtext: "Be honest — plans that don't fit real life don't get followed",
       },
       equipment: { question: 'What equipment do you have access to?' },
       primaryGoal: { question: 'What matters most to you right now?' },
       bodyFrustration: {
-        question: 'Is there a specific area that exercise hasn\'t seemed to fix?',
-        subtext: 'Select the one that resonates most',
+        question: "Is there a specific area that exercise hasn't seemed to fix?",
+        subtext: 'Select all that apply',
       },
+      weightBracket: {
+        question: 'Roughly what is your current weight?',
+        subtext: 'Used only to calculate your daily protein target',
+      },
+      dietaryPattern: { question: 'How would you describe your diet?' },
       medicalConditions: {
         question: 'Do any of the following apply to you?',
         subtext: 'Select all that apply — this changes your actual plan, not just adds disclaimers',
@@ -383,14 +651,21 @@ export default function QuizPage() {
   const getStepContent = () => {
     switch (currentStepKey) {
       case 'stage': return renderStageStep()
+      case 'age': return renderAgeStep()
+      case 'menstrualStatus': return renderMenstrualStatusStep()
+      case 'hrtStatus': return renderHRTStep()
+      case 'hotFlashSeverity': return renderHotFlashStep()
       case 'exerciseType': return renderExerciseTypeStep()
       case 'jointPain': return renderJointPainStep()
+      case 'stressLevel': return renderStressStep()
       case 'energyLevel': return renderEnergyStep()
       case 'sleepQuality': return renderSleepStep()
       case 'timeAvailable': return renderTimeStep()
       case 'equipment': return renderEquipmentStep()
       case 'primaryGoal': return renderGoalStep()
       case 'bodyFrustration': return renderFrustrationStep()
+      case 'weightBracket': return renderWeightStep()
+      case 'dietaryPattern': return renderDietaryStep()
       case 'medicalConditions': return renderMedicalStep()
       default: return null
     }
@@ -400,7 +675,7 @@ export default function QuizPage() {
 
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: tokens.colors.background }}>
-      <ProgressBar current={currentStepIndex + 1} total={totalSteps} />
+      <ProgressBar current={effectiveCurrentStep} total={effectiveTotal} />
 
       <div className="px-6 pt-4">
         <button
@@ -434,7 +709,7 @@ export default function QuizPage() {
                   color: tokens.colors.foregroundMuted,
                 }}
               >
-                {currentStepIndex + 1} of {totalSteps}
+                {effectiveCurrentStep} of {effectiveTotal}
               </p>
               <h1
                 className="mb-2"
